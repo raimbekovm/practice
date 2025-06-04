@@ -53,34 +53,22 @@ def extract_station_info(header, filename):
     delta_hen = header.get('ANTENNA: DELTA H/E/N', '-')
     return StationInfo(marker_name, marker_number, receiver, antenna, xyz, delta_hen, filename)
 
-def yd_to_ymd(day_of_year, year):
-    # Проверка на високосный год
-    is_leap = year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
-    DM = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
-    if is_leap:
-        for i in range(2, len(DM)):
-            DM[i] += 1
-    for month in range(1, len(DM)):
-        if day_of_year <= DM[month]:
-            day = day_of_year - DM[month - 1]
-            return f"{year:04d} {month:02d} {day:02d} 00 00 00"
-    return "0000 00 00 00 00 00"
-
 def extract_date_from_filename(filename):
-    # Пример: CHUM0010.02O -> день года (001), год (02)
+    # Пример: CHUM0010.02O -> день года (001), год (0.02)
+    # Берём 3 цифры после имени станции и 2 цифры года перед 'O'
     import re
     match = re.search(r'(\d{3})\w*\.(\d{2})[Oo]$', filename)
     if match:
         day_of_year = int(match.group(1))
         year = int(match.group(2))
+        # Преобразуем в формат YYYY-MM-DD
         year_full = 2000 + year if year < 80 else 1900 + year
-        return yd_to_ymd(day_of_year, year_full)
-    return '0000 00 00 00 00 00'
+        date = datetime.datetime.strptime(f'{year_full} {day_of_year}', '%Y %j').date()
+        return date.strftime('%Y-%m-%d')
+    return '-'
 
 def date_to_bernese_format(date_str):
-    # Если дата уже в формате Bernese, возвращаем как есть
-    if len(date_str.split()) == 6:
-        return date_str
+    # Преобразует YYYY-MM-DD в YYYY MM DD 00 00 00
     try:
         dt = datetime.datetime.strptime(date_str, '%Y-%m-%d')
         return dt.strftime('%Y %m %d 00 00 00')
@@ -103,18 +91,92 @@ def parse_delta_hen(delta_line):
     north = delta_line[36:43].strip()
     return up, east, north
 
-def format_sta_type_002(station: StationInfo, from_date, to_date):
-    name = station.marker_name[:4].strip()
-    number = station.marker_number[:9].strip()
+def get_combined_periods(stations):
+    # Группируем по станции, находим min FROM и max TO, выбираем один StationInfo
+    from collections import defaultdict
+    import datetime
+    station_data = defaultdict(list)
+    for st in stations:
+        # Используем комбинацию имени и номера как уникальный ID станции
+        station_key = (st.marker_name[:4].strip(), st.marker_number[:9].strip())
+        from_date_str = extract_date_from_filename(st.filename)
+        if from_date_str != '-':
+             # Преобразуем дату в объект datetime для сравнения
+            from_date = datetime.datetime.strptime(from_date_str, '%Y-%m-%d').date()
+            station_data[station_key].append({
+                'station_info': st,
+                'from_date': from_date,
+                'filename': st.filename # Сохраняем имя файла для REMARK
+            })
+
+    combined_periods = []
+    for key, data_list in station_data.items():
+        if not data_list: # Пропускаем пустые группы
+            continue
+        
+        # Находим самую раннюю дату начала
+        min_from_date_obj = min(data_list, key=lambda x: x['from_date'])['from_date']
+        # Находим самую позднюю дату (для TO берем дату из файла и прибавляем 1 день минус 1 секунду)
+        # Если нужно ТОЧНОЕ время из TIME OF LAST OBS, потребуется парсить его тоже
+        # Сейчас берем FROM самой поздней даты и считаем ТО концом этого дня
+        max_from_date_obj = max(data_list, key=lambda x: x['from_date'])['from_date']
+        max_to_date_obj = max_from_date_obj + datetime.timedelta(days=1) - datetime.timedelta(seconds=1)
+
+        # Выбираем StationInfo объект для представления станции (например, с самой ранней датой)
+        representative_station = min(data_list, key=lambda x: x['from_date'])['station_info']
+
+        combined_periods.append({
+            'station_info': representative_station,
+            'from_date': min_from_date_obj.strftime('%Y-%m-%d'),
+            'to_date': max_to_date_obj.strftime('%Y-%m-%d'), # Преобразуем обратно в строку YYYY-MM-DD
+            'remark_filename': representative_station.filename # Имя файла для REMARK
+        })
+        
+    # Сортируем итоговый список по STATION NAME для последовательности в файле
+    combined_periods.sort(key=lambda x: (x['station_info'].marker_name, x['station_info'].marker_number))
+    
+    return combined_periods
+
+def format_sta_type_001(station_data):
+    st = station_data['station_info']
+    from_date = station_data['from_date']
+    to_date = station_data['to_date']
+    remark_filename = station_data['remark_filename']
+    
+    name = st.marker_name[:4].strip()
+    number = st.marker_number[:9].strip()
     station_id = f'{name} {number}'
     flg = '001'
     from_date_fmt = date_to_bernese_format(from_date)
     to_date_fmt = date_to_bernese_format(to_date)
-    rec_serial, rec_type = parse_rec_fields(station.receiver)
-    ant_serial, ant_type = parse_ant_fields(station.antenna)
-    up, east, north = parse_delta_hen(station.delta_hen)
+    old_station_name = f'{name}*'
+    remark = f'From {remark_filename}'
+    return (
+        f'{station_id:<13}' + ' '*8 +
+        f'{flg:<3}' + '  ' +
+        f'{from_date_fmt:<17}' + '  ' +
+        f'{to_date_fmt:<17}' + '  ' +
+        f'{old_station_name:<20}' + '  ' +
+        f'{remark:<24}'
+    )
+
+def format_sta_type_002(station_data):
+    st = station_data['station_info']
+    from_date = station_data['from_date']
+    to_date = station_data['to_date']
+    remark_filename = station_data['remark_filename']
+    
+    name = st.marker_name[:4].strip()
+    number = st.marker_number[:9].strip()
+    station_id = f'{name} {number}'
+    flg = '001'
+    from_date_fmt = date_to_bernese_format(from_date)
+    to_date_fmt = date_to_bernese_format(to_date)
+    rec_serial, rec_type = parse_rec_fields(st.receiver)
+    ant_serial, ant_type = parse_ant_fields(st.antenna)
+    up, east, north = parse_delta_hen(st.delta_hen)
     description = f'{name} {number}'
-    remark = f'From {name}{number}.SMT'
+    remark = f'From {remark_filename}'
     return (
         f'{station_id:<13}' + ' '*8 +
         f'{flg:<3}' + '  ' +
@@ -133,44 +195,7 @@ def format_sta_type_002(station: StationInfo, from_date, to_date):
         f'{remark:<24}'
     )
 
-def format_sta_type_001(station: StationInfo, from_date, to_date):
-    name = station.marker_name[:4].strip()
-    number = station.marker_number[:9].strip()
-    station_id = f'{name} {number}'
-    flg = '001'
-    from_date_fmt = date_to_bernese_format(from_date)
-    to_date_fmt = date_to_bernese_format(to_date)
-    old_station_name = f'{name}*'
-    remark = f'From {name}{number}.SMT'
-    return (
-        f'{station_id:<13}' + ' '*8 +
-        f'{flg:<3}' + '  ' +
-        f'{from_date_fmt:<17}' + '  ' +
-        f'{to_date_fmt:<17}' + '  ' +
-        f'{old_station_name:<20}' + '  ' +
-        f'{remark:<24}'
-    )
-
-def get_periods(stations):
-    # Группируем по станции, сортируем по from_date, формируем пары (from, to)
-    from collections import defaultdict
-    import operator
-    station_groups = defaultdict(list)
-    for st in stations:
-        from_date = extract_date_from_filename(st.filename)
-        station_groups[(st.marker_name[:4].strip(), st.marker_number[:9].strip())].append((st, from_date))
-    periods = []
-    for group in station_groups.values():
-        group_sorted = sorted(group, key=lambda x: x[1])
-        for i, (st, from_date) in enumerate(group_sorted):
-            if i+1 < len(group_sorted):
-                to_date = group_sorted[i+1][1]
-            else:
-                to_date = '9999-12-31'
-            periods.append((st, (from_date, to_date)))
-    return periods
-
-def save_sta_file(stations, output_path, periods):
+def save_sta_file(combined_periods, output_path):
     header = (
         'Station information file\n'
         '--------------------------------------------------------------------------------\n\n'
@@ -206,11 +231,11 @@ def save_sta_file(stations, output_path, periods):
     )
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(header)
-        for st, (from_date, to_date) in periods:
-            f.write(format_sta_type_001(st, from_date, to_date) + '\n')
+        for item in combined_periods:
+            f.write(format_sta_type_001(item) + '\n')
         f.write(type2_header)
-        for st, (from_date, to_date) in periods:
-            f.write(format_sta_type_002(st, from_date, to_date) + '\n')
+        for item in combined_periods:
+            f.write(format_sta_type_002(item) + '\n')
         f.write(type3)
         f.write(type4)
         f.write(type5)
@@ -227,9 +252,12 @@ def main():
         header = parse_rinex_header(file)
         station = extract_station_info(header, os.path.basename(file))
         stations.append(station)
-    print(f'Собрано информации о {len(stations)} станциях.')
-    periods = get_periods(stations)
-    save_sta_file(stations, '2025_05_22-Задание на практику/2025.STA', periods)
+    print(f'Собрано информации о {len(stations)} записях из файлов.')
+    
+    combined_periods = get_combined_periods(stations)
+    print(f'Сформировано {len(combined_periods)} уникальных записей станций с объединенными периодами.')
+
+    save_sta_file(combined_periods, '2025_05_22-Задание на практику/2025.STA')
 
 if __name__ == '__main__':
     main() 

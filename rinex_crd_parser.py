@@ -10,7 +10,7 @@ from rinex_header_parser import (
 def parse_xyz_coordinates(xyz_line):
     """Parse X, Y, Z coordinates from APPROX POSITION XYZ line"""
     if xyz_line == '-':
-        return '0.0000000000', '0.0000000000', '0.0000000000'
+        return '0.00000', '0.00000', '0.00000'
     
     # Extract coordinates from the line using exact character positions
     # X – символы с 3 по 15
@@ -20,13 +20,13 @@ def parse_xyz_coordinates(xyz_line):
     y = xyz_line[16:29].strip()  # 17-29 (0-based index: 16-28)
     z = xyz_line[30:43].strip()  # 31-43 (0-based index: 30-42)
     
-    # Format to 10 decimal places
+    # Format to 5 decimal places
     try:
-        x = f"{float(x):.10f}"
-        y = f"{float(y):.10f}"
-        z = f"{float(z):.10f}"
+        x = f"{float(x):.5f}"
+        y = f"{float(y):.5f}"
+        z = f"{float(z):.5f}"
     except ValueError:
-        x = y = z = '0.0000000000'
+        x = y = z = '0.00000'
     
     return x, y, z
 
@@ -36,15 +36,20 @@ def format_crd_line(num, station_id, x, y, z):
     station_name = station_id[:4]
     station_number = station_id[4:]
     
+    # Extract only numeric part from station number
+    numeric_part = ''.join(filter(str.isdigit, station_number))
+    # If no numeric part found, use "0"
+    formatted_number = f"{int(numeric_part):3d}" if numeric_part else "  0"
+    
     # Format with proper spacing for alignment
-    # NUM(2) + 3 spaces + STATION_NAME(4) + space + STATION_NUMBER(9) + 2 spaces + X(19) + 3 spaces + Y(19) + 3 spaces + Z(19) + 3 spaces + FLAG(3)
+    # NUM(3) + space + STATION_NAME(4) + STATION_NUMBER(9) + space + X(14) + space + Y(14) + space + Z(14) + space + FLG(3)
     return (
-        f"{num:02d}   "  # 2-digit number with 3 spaces
-        f"{station_name} {station_number:<9}  "  # Station name and number with 2 spaces after
-        f"{x:>19}   "  # X coordinate with 3 spaces after
-        f"{y:>19}   "  # Y coordinate with 3 spaces after
-        f"{z:>19}   "  # Z coordinate with 3 spaces after
-        f"001"  # Flag as 001
+        f"{num:3d}  "  # 3-digit number + space
+        f"{station_name} {formatted_number}     "  # Station name and number + space
+        f"{x:>14} "  # X coordinate + space
+        f"{y:>14} "  # Y coordinate + space
+        f"{z:>14} "  # Z coordinate + space
+        f"{'I':>3}"  # Flag
     )
 
 def save_crd_file(stations, output_path):
@@ -53,7 +58,7 @@ def save_crd_file(stations, output_path):
         "PPP_210940: Collecting results                                   06-MAY-25 12:25\n"
         "--------------------------------------------------------------------------------\n"
         "LOCAL GEODETIC DATUM: IGS20             EPOCH: 2025-03-01 00:00:00\n\n"
-        "NUM  STATION NAME           X (M)                  Y (M)                  Z (M)        FLG\n\n"
+        "NUM  STATION NAME           X (M)          Y (M)          Z (M)     FLAG\n\n"
     )
     
     with open(output_path, 'w', encoding='utf-8') as f:

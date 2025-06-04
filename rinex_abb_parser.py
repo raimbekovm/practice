@@ -27,7 +27,7 @@ def generate_sequence_id(index):
     second_char = chr(ord('A') + (index % 26))
     return f"{first_char}{second_char}"
 
-def format_abb_line(station_id, sequence_id):
+def format_abb_line(station_id, sequence_id, rinex_filename):
     """Format a line for the ABB file according to the template"""
     # Split station_id into name and number
     station_name = station_id[:4]
@@ -41,7 +41,7 @@ def format_abb_line(station_id, sequence_id):
         f"{' ' * 5}"   # 5 spaces after 4-ID
         f"{sequence_id:<2}"
         f"{' ' * 5}"   # 5 spaces after 2-ID
-        f"From {station_id}.SMT"
+        f"From {rinex_filename}"
     )
 
 def save_abb_file(stations, output_path):
@@ -49,6 +49,7 @@ def save_abb_file(stations, output_path):
     header = (
         "ABBREVIATON FILE\n"
         "--------------------------------------------------------------------------------\n\n"
+        "Station name             4-ID    2-ID    Remark\n\n\n"
     )
     
     with open(output_path, 'w', encoding='utf-8') as f:
@@ -58,7 +59,7 @@ def save_abb_file(stations, output_path):
         for i, station in enumerate(stations):
             station_id = generate_station_id(station.marker_name, station.marker_number)
             sequence_id = generate_sequence_id(i)
-            line = format_abb_line(station_id, sequence_id)
+            line = format_abb_line(station_id, sequence_id, station.filename)
             f.write(line + '\n')
     
     print(f'Файл {output_path} успешно создан!')

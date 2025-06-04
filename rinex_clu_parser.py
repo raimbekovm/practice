@@ -25,6 +25,7 @@ def save_clu_file(stations, output_path):
         "BSW 5.2: PROCESSING EXAMPLE                                      10-JAN-12 06:07\n"
         "--------------------------------------------------------------------------------\n\n"
         "STATION NAME      CLU\n"
+        "****************  ***\n"
     )
     
     with open(output_path, 'w', encoding='utf-8') as f:

@@ -7,16 +7,15 @@ from rinex_header_parser import (
     StationInfo
 )
 
-def format_pld_line(num, station_id):
+def format_pld_line(num, station_id, plate_name):
     """Format a line for the PLD file according to the template"""
     # Split station_id into name and number
     station_name = station_id[:4]
     station_number = station_id[4:]
     
-    # Format: NUM(2) + 2 spaces + STATION_NAME(4) + space + STATION_NUMBER(9) + spaces + VX(13) + spaces + VY(13) + spaces + VZ(13) + spaces + FLAG(4) + spaces + PLATE(4)
+    # Format: NUM(3) + space + STATION_NAME(4) + space + STATION_NUMBER(9) + spaces + VX(13) + spaces + VY(13) + spaces + VZ(13) + spaces + FLAG(4) + spaces + PLATE(4)
     line = (
-        f"{num:02d}  "  # 2-digit number with leading zeros and 2 spaces
-        f"{' ' * 1}"    # Add 2 spaces to reach column 6
+        f"{num:3d} "  # 3-digit number with space (no leading zeros)
         f"{station_name} {station_number:<9}"  # Station name and number
         f"{' ' * 13}"  # VX space
         f"{' ' * 13}"  # VY space
@@ -24,14 +23,17 @@ def format_pld_line(num, station_id):
         f"{' ' * 4}"   # FLAG space
     )
     
-    # Ensure the line is exactly 75 characters before adding EURA
+    # Ensure the line is exactly 75 characters before adding plate name
     line = line.ljust(75)
-    line += "EURA"  # Add EURA in positions 76-80
+    line += plate_name  # Add user-provided plate name
     
     return line
 
 def save_pld_file(stations, output_path):
     """Save the PLD file with the formatted station information"""
+    # Get plate name from user
+    plate_name = input("Введите название плиты: ").strip()
+    
     header = (
         "Example plate assignement\n"
         "--------------------------------------------------------------------------------\n"
@@ -45,7 +47,7 @@ def save_pld_file(stations, output_path):
         # Process each station
         for i, station in enumerate(stations, 1):
             station_id = f"{station.marker_name[:4].strip()}{station.marker_number[:9].strip()}"
-            line = format_pld_line(i, station_id)
+            line = format_pld_line(i, station_id, plate_name)
             f.write(line + '\n')
     
     print(f'Файл {output_path} успешно создан!')

@@ -1,0 +1,57 @@
+Example plate assignement
+--------------------------------------------------------------------------------
+LOCAL GEODETIC DATUM: IGS14           
+
+NUM  STATION NAME           VX (M/Y)       VY (M/Y)       VZ (M/Y)  FLAG   PLATE
+
+01   PERT 50133M001                                                        EURA - запрос значения у пользователя
+02   MDVJ 12309M005                                                        EURA
+03   MDVJ 12309M005                                                        EURA
+04   PERT 50133M001                                                        EURA
+05   ULAB 24201M001                                                        EURA
+06   WUHN 21602M001                                                        EURA
+07   ONSA 10402M004                                                        EURA
+08   WUHN 21602M001                                                        EURA
+09   ULAB 24201M001                                                        EURA
+10   MDVJ 12309M005                                                        EURA
+11   PERT 50133M001                                                        EURA
+12   WSRT 13506M005                                                        EURA
+13   WSRT 13506M005                                                        EURA
+14   ONSA 10402M004                                                        EURA
+15   WUHN 21602M001                                                        EURA
+16   WSRT 13506M005                                                        EURA
+17   WSRT 13506M005                                                        EURA
+18   WSRT 13506M005                                                        EURA
+19   MDVJ 12309M005                                                        EURA
+20   ULAB 24201M001                                                        EURA
+21   PERT 50133M001                                                        EURA
+22   ONSA 10402M004                                                        EURA
+23   WUHN 21602M001                                                        EURA
+24   WUHN 21602M001                                                        EURA
+25   ONSA 10402M004                                                        EURA
+26   ULAB 24201M001                                                        EURA
+27   PERT 50133M001                                                        EURA
+28   ULAB 24201M001                                                        EURA
+29   MDVJ 12309M005                                                        EURA
+30   CHUM 25601M001                                                        EURA
+31   CHUM 25601M001                                                        EURA
+32   CHUM 25601M001                                                        EURA
+33   CHUM 25601M001                                                        EURA
+34   CHUM 25601M001                                                        EURA
+35   CHUM 25601M001                                                        EURA
+36   CHUM 25601M001                                                        EURA
+37   CHUM 25601M001                                                        EURA
+38   CHUM 25601M001                                                        EURA
+39   CHUM 25601M001                                                        EURA
+40   CHUM 25601M001                                                        EURA
+41   CHUM 25601M001                                                        EURA
+42   CHUM 25601M001                                                        EURA
+43   CHUM 25601M001                                                        EURA
+44   CHUM 25601M001                                                        EURA
+45   CHUM 25601M001                                                        EURA
+46   CHUM 25601M001                                                        EURA
+47   CHUM 25601M001                                                        EURA
+48   CHUM 25601M001                                                        EURA
+49   CHUM 25601M001                                                        EURA
+50   CHUM 25601M001                                                        EURA
+51   CHUM 25601M001                                                        EURA
