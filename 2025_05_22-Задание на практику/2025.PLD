@@ -4,54 +4,54 @@ LOCAL GEODETIC DATUM: IGS14
 
 NUM  STATION NAME           VX (M/Y)       VY (M/Y)       VZ (M/Y)  FLAG   PLATE
 
-  1 PERT 50133M001                                                         NET
-  2 MDVJ 12309M005                                                         NET
-  3 MDVJ 12309M005                                                         NET
-  4 PERT 50133M001                                                         NET
-  5 ULAB 24201M001                                                         NET
-  6 WUHN 21602M001                                                         NET
-  7 ONSA 10402M004                                                         NET
-  8 WUHN 21602M001                                                         NET
-  9 ULAB 24201M001                                                         NET
- 10 MDVJ 12309M005                                                         NET
- 11 PERT 50133M001                                                         NET
- 12 WSRT 13506M005                                                         NET
- 13 WSRT 13506M005                                                         NET
- 14 ONSA 10402M004                                                         NET
- 15 WUHN 21602M001                                                         NET
- 16 WSRT 13506M005                                                         NET
- 17 WSRT 13506M005                                                         NET
- 18 WSRT 13506M005                                                         NET
- 19 MDVJ 12309M005                                                         NET
- 20 ULAB 24201M001                                                         NET
- 21 PERT 50133M001                                                         NET
- 22 ONSA 10402M004                                                         NET
- 23 WUHN 21602M001                                                         NET
- 24 WUHN 21602M001                                                         NET
- 25 ONSA 10402M004                                                         NET
- 26 ULAB 24201M001                                                         NET
- 27 PERT 50133M001                                                         NET
- 28 ULAB 24201M001                                                         NET
- 29 MDVJ 12309M005                                                         NET
- 30 CHUM 25601M001                                                         NET
- 31 CHUM 25601M001                                                         NET
- 32 CHUM 25601M001                                                         NET
- 33 CHUM 25601M001                                                         NET
- 34 CHUM 25601M001                                                         NET
- 35 CHUM 25601M001                                                         NET
- 36 CHUM 25601M001                                                         NET
- 37 CHUM 25601M001                                                         NET
- 38 CHUM 25601M001                                                         NET
- 39 CHUM 25601M001                                                         NET
- 40 CHUM 25601M001                                                         NET
- 41 CHUM 25601M001                                                         NET
- 42 CHUM 25601M001                                                         NET
- 43 CHUM 25601M001                                                         NET
- 44 CHUM 25601M001                                                         NET
- 45 CHUM 25601M001                                                         NET
- 46 CHUM 25601M001                                                         NET
- 47 CHUM 25601M001                                                         NET
- 48 CHUM 25601M001                                                         NET
- 49 CHUM 25601M001                                                         NET
- 50 CHUM 25601M001                                                         NET
- 51 CHUM 25601M001                                                         NET
+  1 PERT 50133M001                                                         с консоли
+  2 MDVJ 12309M005                                                         с консоли
+  3 MDVJ 12309M005                                                         с консоли
+  4 PERT 50133M001                                                         с консоли
+  5 ULAB 24201M001                                                         с консоли
+  6 WUHN 21602M001                                                         с консоли
+  7 ONSA 10402M004                                                         с консоли
+  8 WUHN 21602M001                                                         с консоли
+  9 ULAB 24201M001                                                         с консоли
+ 10 MDVJ 12309M005                                                         с консоли
+ 11 PERT 50133M001                                                         с консоли
+ 12 WSRT 13506M005                                                         с консоли
+ 13 WSRT 13506M005                                                         с консоли
+ 14 ONSA 10402M004                                                         с консоли
+ 15 WUHN 21602M001                                                         с консоли
+ 16 WSRT 13506M005                                                         с консоли
+ 17 WSRT 13506M005                                                         с консоли
+ 18 WSRT 13506M005                                                         с консоли
+ 19 MDVJ 12309M005                                                         с консоли
+ 20 ULAB 24201M001                                                         с консоли
+ 21 PERT 50133M001                                                         с консоли
+ 22 ONSA 10402M004                                                         с консоли
+ 23 WUHN 21602M001                                                         с консоли
+ 24 WUHN 21602M001                                                         с консоли
+ 25 ONSA 10402M004                                                         с консоли
+ 26 ULAB 24201M001                                                         с консоли
+ 27 PERT 50133M001                                                         с консоли
+ 28 ULAB 24201M001                                                         с консоли
+ 29 MDVJ 12309M005                                                         с консоли
+ 30 CHUM 25601M001                                                         с консоли
+ 31 CHUM 25601M001                                                         с консоли
+ 32 CHUM 25601M001                                                         с консоли
+ 33 CHUM 25601M001                                                         с консоли
+ 34 CHUM 25601M001                                                         с консоли
+ 35 CHUM 25601M001                                                         с консоли
+ 36 CHUM 25601M001                                                         с консоли
+ 37 CHUM 25601M001                                                         с консоли
+ 38 CHUM 25601M001                                                         с консоли
+ 39 CHUM 25601M001                                                         с консоли
+ 40 CHUM 25601M001                                                         с консоли
+ 41 CHUM 25601M001                                                         с консоли
+ 42 CHUM 25601M001                                                         с консоли
+ 43 CHUM 25601M001                                                         с консоли
+ 44 CHUM 25601M001                                                         с консоли
+ 45 CHUM 25601M001                                                         с консоли
+ 46 CHUM 25601M001                                                         с консоли
+ 47 CHUM 25601M001                                                         с консоли
+ 48 CHUM 25601M001                                                         с консоли
+ 49 CHUM 25601M001                                                         с консоли
+ 50 CHUM 25601M001                                                         с консоли
+ 51 CHUM 25601M001                                                         с консоли
