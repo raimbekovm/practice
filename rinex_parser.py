@@ -383,7 +383,7 @@ def format_sta_type_002(station_data):
     remark_filename = station_data['remark_filename']
     
     name = st.marker_name[:4].strip()
-    number = st.marker_number[:9]  # Already padded to 9 chars in extract_station_info
+    number = st.marker_number[:9]
     station_id = f'{name} {number}'
     flg = '001'
     from_date_fmt = date_to_bernese_format(from_date)
