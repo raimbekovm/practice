@@ -1,0 +1,73 @@
+     2              OBSERVATION DATA    G                   RINEX VERSION / TYPE
+Spider V1,0,0,1114                      2005 04 25 05:01    PGM / RUN BY / DATE
+OBSERVATION MODE: Permanent                                 COMMENT
+CHLK LKZ_Chilik                                             MARKER NAME
+CHLK                                                        MARKER NUMBER
+82150               LEICA RS500          4.20               REC # / TYPE / VERS
+1257                LEIAT504        NONE                    ANT # / TYPE
+        0.1000        0.0000        0.0000                  ANTENNA: DELTA H/E/N
+  933553.2352  4537134.4414  4370797.2936                   APPROX POSITION XYZ
+  78.37318284  43.52910581  712.0788  LonLatAlt  S/W        COMMENT
+kons                IVTAN                                   OBSERVER / AGENCY
+     1     1                                                WAVELENGTH FACT L1/2
+     4    C1    L1    P2    L2                              # / TYPES OF OBSERV
+    30.000                                                  INTERVAL
+    32                                                      # OF SATELLITES
+   G 1   773   773   762   762                              PRN / # OF OBS
+   G 2   728   728   711   711                              PRN / # OF OBS
+   G 3   845   845   798   798                              PRN / # OF OBS
+   G 4   667   667   636   636                              PRN / # OF OBS
+   G 5   792   792   720   720                              PRN / # OF OBS
+   G 6   623   623   598   598                              PRN / # OF OBS
+   G 7   757   757   735   735                              PRN / # OF OBS
+   G 8   695   695   682   682                              PRN / # OF OBS
+   G 9   832   832   796   796                              PRN / # OF OBS
+   G10   609   609   580   580                              PRN / # OF OBS
+   G11   886   886   824   824                              PRN / # OF OBS
+   G12     0     0     0     0                              PRN / # OF OBS
+   G13   620   620   596   596                              PRN / # OF OBS
+   G14   714   714   694   694                              PRN / # OF OBS
+   G15   626   626   605   605                              PRN / # OF OBS
+   G16   676   676   591   591                              PRN / # OF OBS
+   G17     0     0     0     0                              PRN / # OF OBS
+   G18   752   752   727   727                              PRN / # OF OBS
+   G19   842   842   828   828                              PRN / # OF OBS
+   G20   806   806   718   718                              PRN / # OF OBS
+   G21   751   751   712   712                              PRN / # OF OBS
+   G22   796   796   790   790                              PRN / # OF OBS
+   G23   707   707   689   689                              PRN / # OF OBS
+   G24   740   740   652   652                              PRN / # OF OBS
+   G25   714   714   694   694                              PRN / # OF OBS
+   G26   820   820   789   789                              PRN / # OF OBS
+   G27   743   743   721   721                              PRN / # OF OBS
+   G28   799   799   763   763                              PRN / # OF OBS
+   G29   855   855   821   821                              PRN / # OF OBS
+   G30   839   839   800   800                              PRN / # OF OBS
+   G31     0     0     0     0                              PRN / # OF OBS
+   G32     0     0     0     0                              PRN / # OF OBS
+BIT 2 OF LLI FLAGS DATA COLLECTED UNDER A/S CONDITION       COMMENT
+SNR is mapped to RINEX snr flag value [2-9]                 COMMENT
+L1&L2:  = 25dBHz -> 1; 26-27dBHz -> 2; 28-31dBHz -> 3       COMMENT
+       32-35dBHz -> 4; 36-38dBHz -> 5; 39-41dBHz -> 6       COMMENT
+       42-44dBHz -> 7; 45-48dBHz -> 8; 49-55dBHz -> 9       COMMENT
+  2005    03    11    00    00    0.0000000     GPS         TIME OF FIRST OBS
+  2005    03    11    00    00   30.0000000     GPS         TIME OF LAST OBS
+                                                            END OF HEADER
+ 05 03 11 00 00  0.0000000  0  8G07G08G11G19G26G27G28G29
+  22635690.281   118951369.37547  22635689.437    92689383.67147
+  20055635.440   105393079.20848  20055633.794    82124477.99049
+  22174172.762   116526071.63447  22174170.528    90799527.26647
+  23702877.160   124559480.05846  23702873.166    97059307.27047
+  23386633.668   122897583.13645  23386632.028    95764355.76645
+  21109720.163   110932305.59648  21109718.480    86440792.57048
+  20968330.920   110189313.20348  20968328.271    85861839.79949
+  23101879.737   121401184.22346  23101878.199    94598335.56547
+ 05 03 11 00 00 30.0000000  0  8G07G08G11G19G26G27G28G29
+  22619651.235   118867083.68047  22619650.382    92623706.51647
+  20059829.828   105415120.92548  20059828.194    82141653.35849
+  22167187.613   116489364.39347  22167185.364    90770924.21748
+  23721309.247   124656341.17246  23721305.249    97134783.44147
+  23378654.523   122855652.44445  23378652.850    95731682.49146
+  21120469.060   110988791.36548  21120467.377    86484807.44549
+  20961568.243   110153775.12348  20961565.599    85834147.79049
+  23097752.461   121379495.30346  23097750.932    94581435.12547

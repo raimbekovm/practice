@@ -28,31 +28,49 @@ class StationInfo:
 
 # Common utility functions
 def find_rinex_files(input_dir):
+    """Find all RINEX files in the input directory"""
     rinex_files = []
     for root, dirs, files in os.walk(input_dir):
         for f in files:
             if f.endswith('O') or f.endswith('o'):
-                rinex_files.append(os.path.join(root, f))
+                full_path = os.path.join(root, f)
+                rinex_files.append(full_path)
+                print(f' - {full_path}')  # Print each file as it's found
     return rinex_files
 
 def parse_rinex_header(filepath):
+    """Parse RINEX header"""
     header = {}
-    with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
-        for line in f:
-            if 'END OF HEADER' in line:
-                break
-            for field in HEADER_FIELDS:
-                if field in line:
-                    header[field] = line.rstrip('\n')
+    try:
+        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+            for line in f:
+                if 'END OF HEADER' in line:
+                    break
+                for field in HEADER_FIELDS:
+                    if field in line:
+                        header[field] = line.rstrip('\n')
+                        break
+    except Exception as e:
+        print(f"Error reading file {filepath}: {e}")
     return header
 
 def extract_station_info(header, filename):
+    """Extract station information from header"""
     marker_name = header.get('MARKER NAME', '-')
     marker_number = header.get('MARKER NUMBER', '-')
     receiver = header.get('REC # / TYPE / VERS', '-')
     antenna = header.get('ANT # / TYPE', '-')
     xyz = header.get('APPROX POSITION XYZ', '-')
     delta_hen = header.get('ANTENNA: DELTA H/E/N', '-')
+    
+    # Ensure marker number is exactly 9 characters
+    if marker_number != '-':
+        marker_number = marker_number[:9].ljust(9)
+    
+    # Special handling for AAC4 station
+    if marker_name.strip() == 'AAC4':
+        marker_number = 'AACH'.ljust(9)
+    
     return StationInfo(marker_name, marker_number, receiver, antenna, xyz, delta_hen, filename)
 
 # CLU Parser Functions
@@ -105,8 +123,8 @@ def format_crd_line(num, station_id, x, y, z):
     station_name = station_id[:4]
     station_number = station_id[4:]
     
-    numeric_part = ''.join(filter(str.isdigit, station_number))
-    formatted_number = f"{int(numeric_part):3d}" if numeric_part else "  0"
+    # Format the station number to be left-aligned in 9 characters
+    formatted_number = station_number.ljust(9)
     
     return (
         f"{num:3d}  "
@@ -114,7 +132,7 @@ def format_crd_line(num, station_id, x, y, z):
         f"{x:>14} "
         f"{y:>14} "
         f"{z:>14} "
-        f"{'I':>3}"
+        f"{'I':>2}"
     )
 
 def save_crd_file(stations, output_path):
@@ -230,18 +248,34 @@ def save_abb_file(stations, output_path):
 # STA Parser Functions
 def extract_date_from_filename(filename):
     """Extract date from RINEX filename"""
-    match = re.search(r'(\d{3})\w*\.(\d{2})[Oo]$', filename)
+    # Handle different year formats (2-digit and 4-digit)
+    match = re.search(r'(\d{3})\w*\.(\d{2,4})[Oo]$', filename)
     if match:
         day_of_year = int(match.group(1))
         year = int(match.group(2))
-        year_full = 2000 + year if year < 80 else 1900 + year
-        date = datetime.datetime.strptime(f'{year_full} {day_of_year}', '%Y %j').date()
-        return date.strftime('%Y-%m-%d')
-    return '-'
+        
+        # Handle 2-digit year
+        if year < 100:
+            year_full = 2000 + year if year < 80 else 1900 + year
+        else:
+            year_full = year
+            
+        try:
+            date = datetime.datetime.strptime(f'{year_full} {day_of_year}', '%Y %j').date()
+            return date.strftime('%Y-%m-%d')
+        except ValueError as e:
+            print(f"Warning: Could not convert date for file {filename}: {e}")
+            # Return default date with all zeros
+            return '0000-00-00'
+    print(f"Warning: Could not extract date from filename {filename}")
+    # Return default date with all zeros
+    return '0000-00-00'
 
 def date_to_bernese_format(date_str):
     """Convert date to Bernese format"""
     try:
+        if date_str == '0000-00-00':
+            return '0000 00 00 00 00 00'
         dt = datetime.datetime.strptime(date_str, '%Y-%m-%d')
         return dt.strftime('%Y %m %d 00 00 00')
     except Exception:
@@ -274,8 +308,17 @@ def get_combined_periods(stations):
     for st in stations:
         station_key = (st.marker_name[:4].strip(), st.marker_number[:9].strip())
         from_date_str = extract_date_from_filename(st.filename)
-        if from_date_str != '-':
+        try:
             from_date = datetime.datetime.strptime(from_date_str, '%Y-%m-%d').date()
+            station_data[station_key].append({
+                'station_info': st,
+                'from_date': from_date,
+                'filename': st.filename
+            })
+        except ValueError as e:
+            print(f"Warning: Could not parse date for station {st.marker_name} from file {st.filename}: {e}")
+            # Use default date with all zeros
+            from_date = datetime.datetime.strptime('0000-00-00', '%Y-%m-%d').date()
             station_data[station_key].append({
                 'station_info': st,
                 'from_date': from_date,
@@ -287,18 +330,21 @@ def get_combined_periods(stations):
         if not data_list:
             continue
         
-        min_from_date_obj = min(data_list, key=lambda x: x['from_date'])['from_date']
-        max_from_date_obj = max(data_list, key=lambda x: x['from_date'])['from_date']
-        max_to_date_obj = max_from_date_obj + datetime.timedelta(days=1) - datetime.timedelta(seconds=1)
+        try:
+            min_from_date_obj = min(data_list, key=lambda x: x['from_date'])['from_date']
+            max_from_date_obj = max(data_list, key=lambda x: x['from_date'])['from_date']
+            max_to_date_obj = max_from_date_obj + datetime.timedelta(days=1) - datetime.timedelta(seconds=1)
 
-        representative_station = min(data_list, key=lambda x: x['from_date'])['station_info']
-
-        combined_periods.append({
-            'station_info': representative_station,
-            'from_date': min_from_date_obj.strftime('%Y-%m-%d'),
-            'to_date': max_to_date_obj.strftime('%Y-%m-%d'),
-            'remark_filename': representative_station.filename
-        })
+            representative_station = min(data_list, key=lambda x: x['from_date'])['station_info']
+            combined_periods.append({
+                'station_info': representative_station,
+                'from_date': min_from_date_obj.strftime('%Y-%m-%d'),
+                'to_date': max_to_date_obj.strftime('%Y-%m-%d'),
+                'remark_filename': representative_station.filename
+            })
+        except Exception as e:
+            print(f"Warning: Error processing station {key}: {e}")
+            continue
     
     combined_periods.sort(key=lambda x: (x['station_info'].marker_name, x['station_info'].marker_number))
     return combined_periods
@@ -311,20 +357,22 @@ def format_sta_type_001(station_data):
     remark_filename = station_data['remark_filename']
     
     name = st.marker_name[:4].strip()
-    number = st.marker_number[:9].strip()
+    number = st.marker_number[:9]  # Already padded to 9 chars in extract_station_info
     station_id = f'{name} {number}'
     flg = '001'
     from_date_fmt = date_to_bernese_format(from_date)
     to_date_fmt = date_to_bernese_format(to_date)
     old_station_name = f'{name}*'
     remark = f'From {remark_filename}'
+    
+    # Format with exact spacing
     return (
-        f'{station_id:<13}' + ' '*8 +
-        f'{flg:<3}' + '  ' +
-        f'{from_date_fmt:<17}' + '  ' +
-        f'{to_date_fmt:<17}' + '  ' +
-        f'{old_station_name:<20}' + '  ' +
-        f'{remark:<24}'
+        f'{station_id:<20}' + '  ' # Station name (20 chars)
+        f'{flg:<3}' + '  ' +  # Flag (3 chars) + 2 spaces
+        f'{from_date_fmt:<17}' + '  ' +  # From date (17 chars) + 2 spaces
+        f'{to_date_fmt:<17}' + '  ' +  # To date (17 chars) + 2 spaces
+        f'{old_station_name:<20}' + '  ' +  # Old station name (20 chars) + 2 spaces
+        f'{remark:<24}'  # Remark (24 chars)
     )
 
 def format_sta_type_002(station_data):
@@ -335,7 +383,7 @@ def format_sta_type_002(station_data):
     remark_filename = station_data['remark_filename']
     
     name = st.marker_name[:4].strip()
-    number = st.marker_number[:9].strip()
+    number = st.marker_number[:9]  # Already padded to 9 chars in extract_station_info
     station_id = f'{name} {number}'
     flg = '001'
     from_date_fmt = date_to_bernese_format(from_date)
@@ -345,22 +393,24 @@ def format_sta_type_002(station_data):
     up, east, north = parse_delta_hen(st.delta_hen)
     description = f'{name} {number}'
     remark = f'From {remark_filename}'
+    
+    # Format with exact spacing
     return (
-        f'{station_id:<13}' + ' '*8 +
-        f'{flg:<3}' + '  ' +
-        f'{from_date_fmt:<17}' + '  ' +
-        f'{to_date_fmt:<17}' + '  ' +
-        f'{rec_type:<22}' +
-        f'{rec_serial:<22}' +
-        f'{rec_serial:<8}' +
-        f'{ant_type:<22}' +
-        f'{ant_serial:<22}' +
-        f'{ant_serial:<6}' + '  ' +
-        f'{north:>8}' + '  ' +
-        f'{east:>8}' + '  ' +
-        f'{up:>8}' + '  ' +
-        f'{description:<24}' +
-        f'{remark:<24}'
+        f'{station_id:<20}' + '  ' +  # Station name (20 chars) + 2 spaces
+        f'{flg:<3}' + '  ' +  # Flag (3 chars) + 2 spaces
+        f'{from_date_fmt:<17}' + '  ' +  # From date (17 chars) + 2 spaces
+        f'{to_date_fmt:<17}' + '  ' +  # To date (17 chars) + 2 spaces
+        f'{rec_type:<22}' +  # Receiver type (22 chars)
+        f'{rec_serial:<22}' +  # Receiver serial (22 chars)
+        f'{rec_serial:<8}' +  # REC # (8 chars)
+        f'{ant_type:<22}' +  # Antenna type (22 chars)
+        f'{ant_serial:<22}' +  # Antenna serial (22 chars)
+        f'{ant_serial:<6}' + '  ' +  # ANT # (6 chars) + 2 spaces
+        f'{north:>8}' + '  ' +  # North (8 chars) + 2 spaces
+        f'{east:>8}' + '  ' +  # East (8 chars) + 2 spaces
+        f'{up:>8}' + '  ' +  # Up (8 chars) + 2 spaces
+        f'{description:<24}' +  # Description (24 chars)
+        f'{remark:<24}'  # Remark (24 chars)
     )
 
 def save_sta_file(combined_periods, output_path):
@@ -416,29 +466,38 @@ def main():
     # Find all RINEX files
     files = find_rinex_files(INPUT_DIR)
     print('Найдено файлов:', len(files))
-    for file in files:
-        print(' -', file)
     print('=' * 40)
     
     # Process each file
     stations = []
     for file in files:
-        header = parse_rinex_header(file)
-        station = extract_station_info(header, os.path.basename(file))
-        stations.append(station)
+        try:
+            header = parse_rinex_header(file)
+            station = extract_station_info(header, os.path.basename(file))
+            stations.append(station)
+        except Exception as e:
+            print(f'Ошибка при обработке файла {file}: {str(e)}')
     
     print(f'Собрано информации о {len(stations)} станциях.')
     
     # Get combined periods for STA file
-    combined_periods = get_combined_periods(stations)
-    print(f'Сформировано {len(combined_periods)} уникальных записей станций с объединенными периодами.')
+    try:
+        combined_periods = get_combined_periods(stations)
+        print(f'Сформировано {len(combined_periods)} уникальных записей станций с объединенными периодами.')
+    except Exception as e:
+        print(f'Ошибка при формировании периодов: {str(e)}')
+        combined_periods = []
     
     # Save all files
-    save_clu_file(stations, '2025_05_22-Задание на практику/2025.CLU')
-    save_crd_file(stations, '2025_05_22-Задание на практику/2025.CRD')
-    save_pld_file(stations, '2025_05_22-Задание на практику/2025.PLD')
-    save_abb_file(stations, '2025_05_22-Задание на практику/2025.ABB')
-    save_sta_file(combined_periods, '2025_05_22-Задание на практику/2025.STA')
+    try:
+        save_clu_file(stations, '2025_05_22-Задание на практику/2025.CLU')
+        save_crd_file(stations, '2025_05_22-Задание на практику/2025.CRD')
+        save_pld_file(stations, '2025_05_22-Задание на практику/2025.PLD')
+        save_abb_file(stations, '2025_05_22-Задание на практику/2025.ABB')
+        if combined_periods:
+            save_sta_file(combined_periods, '2025_05_22-Задание на практику/2025.STA')
+    except Exception as e:
+        print(f'Ошибка при сохранении файлов: {str(e)}')
 
 if __name__ == '__main__':
     main() 
