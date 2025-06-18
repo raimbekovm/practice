@@ -17,7 +17,7 @@ HEADER_FIELDS = [
 ]
 
 class StationInfo:
-    def __init__(self, marker_name, marker_number, receiver, antenna, xyz, delta_hen, filename):
+    def __init__(self, marker_name, marker_number, receiver, antenna, xyz, delta_hen, filename, header):
         self.marker_name = marker_name
         self.marker_number = marker_number
         self.receiver = receiver
@@ -25,6 +25,7 @@ class StationInfo:
         self.xyz = xyz
         self.delta_hen = delta_hen
         self.filename = filename
+        self.header = header
 
 # Common utility functions
 def find_rinex_files(input_dir):
@@ -35,7 +36,6 @@ def find_rinex_files(input_dir):
             if f.endswith('O') or f.endswith('o'):
                 full_path = os.path.join(root, f)
                 rinex_files.append(full_path)
-                print(f' - {full_path}')  # Print each file as it's found
     return rinex_files
 
 def parse_rinex_header(filepath):
@@ -50,9 +50,28 @@ def parse_rinex_header(filepath):
                     if field in line:
                         header[field] = line.rstrip('\n')
                         break
+                if 'TIME OF FIRST OBS' in line:
+                    header['TIME OF FIRST OBS'] = line.rstrip('\n')
+                if 'TIME OF LAST OBS' in line:
+                    header['TIME OF LAST OBS'] = line.rstrip('\n')
     except Exception as e:
         print(f"Error reading file {filepath}: {e}")
     return header
+
+def extract_obs_time(line):
+    """Extract time from TIME OF FIRST/LAST OBS line"""
+    if not line:
+        return '0000 00 00 00 00 00'
+    try:
+        year = line[2:6].strip()
+        month = line[11:13].strip().zfill(2)
+        day = line[16:18].strip().zfill(2)
+        hour = line[23:25].strip().zfill(2)
+        minute = line[29:31].strip().zfill(2)
+        second = line[32:33].strip().zfill(2)
+        return f"{year} {month} {day} {hour} {minute} {second}"
+    except Exception:
+        return '0000 00 00 00 00 00'
 
 def extract_station_info(header, filename):
     """Extract station information from header"""
@@ -71,7 +90,7 @@ def extract_station_info(header, filename):
     if marker_name.strip() == 'AAC4':
         marker_number = 'AACH'.ljust(9)
     
-    return StationInfo(marker_name, marker_number, receiver, antenna, xyz, delta_hen, filename)
+    return StationInfo(marker_name, marker_number, receiver, antenna, xyz, delta_hen, filename, header)
 
 # CLU Parser Functions
 def format_clu_line(station_id):
@@ -96,8 +115,6 @@ def save_clu_file(stations, output_path):
             station_id = f"{station.marker_name[:4].strip()}{station.marker_number[:9].strip()}"
             line = format_clu_line(station_id)
             f.write(line + '\n')
-    
-    print(f'Файл {output_path} успешно создан!')
 
 # CRD Parser Functions
 def parse_xyz_coordinates(xyz_line):
@@ -128,10 +145,10 @@ def format_crd_line(num, station_id, x, y, z):
     
     return (
         f"{num:3d}  "
-        f"{station_name} {formatted_number}     "
+        f"{station_name} {formatted_number}   "
         f"{x:>14} "
         f"{y:>14} "
-        f"{z:>14} "
+        f"{z:>14}   "
         f"{'I':>2}"
     )
 
@@ -151,8 +168,6 @@ def save_crd_file(stations, output_path):
             x, y, z = parse_xyz_coordinates(station.xyz)
             line = format_crd_line(i, station_id, x, y, z)
             f.write(line + '\n')
-    
-    print(f'Файл {output_path} успешно создан!')
 
 # PLD Parser Functions
 def format_pld_line(num, station_id, plate_name):
@@ -161,7 +176,7 @@ def format_pld_line(num, station_id, plate_name):
     station_number = station_id[4:]
     
     line = (
-        f"{num:3d} "
+        f"{num:3d}  "
         f"{station_name} {station_number:<9}"
         f"{' ' * 13}"
         f"{' ' * 13}"
@@ -174,10 +189,8 @@ def format_pld_line(num, station_id, plate_name):
     
     return line
 
-def save_pld_file(stations, output_path):
+def save_pld_file(stations, output_path, plate_name):
     """Save the PLD file with the formatted station information"""
-    plate_name = input("Введите название плиты: ").strip()
-    
     header = (
         "Example plate assignement\n"
         "--------------------------------------------------------------------------------\n"
@@ -191,8 +204,6 @@ def save_pld_file(stations, output_path):
             station_id = f"{station.marker_name[:4].strip()}{station.marker_number[:9].strip()}"
             line = format_pld_line(i, station_id, plate_name)
             f.write(line + '\n')
-    
-    print(f'Файл {output_path} успешно создан!')
 
 # ABB Parser Functions
 def generate_station_id(station_name, station_number):
@@ -242,8 +253,6 @@ def save_abb_file(stations, output_path):
             sequence_id = generate_sequence_id(i)
             line = format_abb_line(station_id, sequence_id, station.filename)
             f.write(line + '\n')
-    
-    print(f'Файл {output_path} успешно создан!')
 
 # STA Parser Functions
 def extract_date_from_filename(filename):
@@ -263,19 +272,13 @@ def extract_date_from_filename(filename):
         try:
             date = datetime.datetime.strptime(f'{year_full} {day_of_year}', '%Y %j').date()
             return date.strftime('%Y-%m-%d')
-        except ValueError as e:
-            print(f"Warning: Could not convert date for file {filename}: {e}")
-            # Return default date with all zeros
-            return '0000-00-00'
-    print(f"Warning: Could not extract date from filename {filename}")
-    # Return default date with all zeros
-    return '0000-00-00'
+        except ValueError:
+            return '2005-01-01'
+    return '2005-01-01'
 
 def date_to_bernese_format(date_str):
     """Convert date to Bernese format"""
     try:
-        if date_str == '0000-00-00':
-            return '0000 00 00 00 00 00'
         dt = datetime.datetime.strptime(date_str, '%Y-%m-%d')
         return dt.strftime('%Y %m %d 00 00 00')
     except Exception:
@@ -317,8 +320,8 @@ def get_combined_periods(stations):
             })
         except ValueError as e:
             print(f"Warning: Could not parse date for station {st.marker_name} from file {st.filename}: {e}")
-            # Use default date with all zeros
-            from_date = datetime.datetime.strptime('0000-00-00', '%Y-%m-%d').date()
+            # Use default date for files with incorrect dates
+            from_date = datetime.datetime.strptime('2005-01-01', '%Y-%m-%d').date()
             station_data[station_key].append({
                 'station_info': st,
                 'from_date': from_date,
@@ -352,16 +355,14 @@ def get_combined_periods(stations):
 def format_sta_type_001(station_data):
     """Format STA type 001 line"""
     st = station_data['station_info']
-    from_date = station_data['from_date']
-    to_date = station_data['to_date']
+    from_date = extract_obs_time(st.header.get('TIME OF FIRST OBS', ''))
+    to_date = extract_obs_time(st.header.get('TIME OF LAST OBS', ''))
     remark_filename = station_data['remark_filename']
     
     name = st.marker_name[:4].strip()
     number = st.marker_number[:9]  # Already padded to 9 chars in extract_station_info
     station_id = f'{name} {number}'
     flg = '001'
-    from_date_fmt = date_to_bernese_format(from_date)
-    to_date_fmt = date_to_bernese_format(to_date)
     old_station_name = f'{name}*'
     remark = f'From {remark_filename}'
     
@@ -369,8 +370,8 @@ def format_sta_type_001(station_data):
     return (
         f'{station_id:<20}' + '  ' # Station name (20 chars)
         f'{flg:<3}' + '  ' +  # Flag (3 chars) + 2 spaces
-        f'{from_date_fmt:<17}' + '  ' +  # From date (17 chars) + 2 spaces
-        f'{to_date_fmt:<17}' + '  ' +  # To date (17 chars) + 2 spaces
+        f'{from_date:<17}' + '  ' +  # From date (17 chars) + 2 spaces
+        f'{to_date:<17}' + '  ' +  # To date (17 chars) + 2 spaces
         f'{old_station_name:<20}' + '  ' +  # Old station name (20 chars) + 2 spaces
         f'{remark:<24}'  # Remark (24 chars)
     )
@@ -378,16 +379,14 @@ def format_sta_type_001(station_data):
 def format_sta_type_002(station_data):
     """Format STA type 002 line"""
     st = station_data['station_info']
-    from_date = station_data['from_date']
-    to_date = station_data['to_date']
+    from_date = extract_obs_time(st.header.get('TIME OF FIRST OBS', ''))
+    to_date = extract_obs_time(st.header.get('TIME OF LAST OBS', ''))
     remark_filename = station_data['remark_filename']
     
     name = st.marker_name[:4].strip()
-    number = st.marker_number[:9]
+    number = st.marker_number[:9]  # Already padded to 9 chars in extract_station_info
     station_id = f'{name} {number}'
     flg = '001'
-    from_date_fmt = date_to_bernese_format(from_date)
-    to_date_fmt = date_to_bernese_format(to_date)
     rec_serial, rec_type = parse_rec_fields(st.receiver)
     ant_serial, ant_type = parse_ant_fields(st.antenna)
     up, east, north = parse_delta_hen(st.delta_hen)
@@ -398,15 +397,15 @@ def format_sta_type_002(station_data):
     return (
         f'{station_id:<20}' + '  ' +  # Station name (20 chars) + 2 spaces
         f'{flg:<3}' + '  ' +  # Flag (3 chars) + 2 spaces
-        f'{from_date_fmt:<17}' + '  ' +  # From date (17 chars) + 2 spaces
-        f'{to_date_fmt:<17}' + '  ' +  # To date (17 chars) + 2 spaces
+        f'{from_date:<17}' + '  ' +  # From date (17 chars) + 2 spaces
+        f'{to_date:<17}' + '  ' +  # To date (17 chars) + 2 spaces
         f'{rec_type:<22}' +  # Receiver type (22 chars)
         f'{rec_serial:<22}' +  # Receiver serial (22 chars)
         f'{rec_serial:<8}' +  # REC # (8 chars)
         f'{ant_type:<22}' +  # Antenna type (22 chars)
         f'{ant_serial:<22}' +  # Antenna serial (22 chars)
-        f'{ant_serial:<6}' + '  ' +  # ANT # (6 chars) + 2 spaces
-        f'{north:>8}' + '  ' +  # North (8 chars) + 2 spaces
+        f'{ant_serial:<6}' + ' ' +  # ANT # (6 chars) + 2 spaces
+        f'{north:>8}' + '   ' +  # North (8 chars) + 2 spaces
         f'{east:>8}' + '  ' +  # East (8 chars) + 2 spaces
         f'{up:>8}' + '  ' +  # Up (8 chars) + 2 spaces
         f'{description:<24}' +  # Description (24 chars)
@@ -459,14 +458,13 @@ def save_sta_file(combined_periods, output_path):
         f.write(type3)
         f.write(type4)
         f.write(type5)
-    
-    print(f'Файл {output_path} успешно создан!')
 
 def main():
+    # Get plate name first
+    plate_name = input("Введите название плиты: ").strip()
+    
     # Find all RINEX files
     files = find_rinex_files(INPUT_DIR)
-    print('Найдено файлов:', len(files))
-    print('=' * 40)
     
     # Process each file
     stations = []
@@ -478,24 +476,16 @@ def main():
         except Exception as e:
             print(f'Ошибка при обработке файла {file}: {str(e)}')
     
-    print(f'Собрано информации о {len(stations)} станциях.')
-    
     # Get combined periods for STA file
-    try:
-        combined_periods = get_combined_periods(stations)
-        print(f'Сформировано {len(combined_periods)} уникальных записей станций с объединенными периодами.')
-    except Exception as e:
-        print(f'Ошибка при формировании периодов: {str(e)}')
-        combined_periods = []
+    combined_periods = get_combined_periods(stations)
     
     # Save all files
     try:
         save_clu_file(stations, '2025_05_22-Задание на практику/2025.CLU')
         save_crd_file(stations, '2025_05_22-Задание на практику/2025.CRD')
-        save_pld_file(stations, '2025_05_22-Задание на практику/2025.PLD')
+        save_pld_file(stations, '2025_05_22-Задание на практику/2025.PLD', plate_name)
         save_abb_file(stations, '2025_05_22-Задание на практику/2025.ABB')
-        if combined_periods:
-            save_sta_file(combined_periods, '2025_05_22-Задание на практику/2025.STA')
+        save_sta_file(combined_periods, '2025_05_22-Задание на практику/2025.STA')
     except Exception as e:
         print(f'Ошибка при сохранении файлов: {str(e)}')
 
