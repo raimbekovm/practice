@@ -8,29 +8,29 @@ TYPE 001: RENAMING OF STATIONS
 --------------------------------------
 
 STATION NAME          FLG          FROM                   TO         OLD STATION NAME      REMARK
-AAC4 AACH             001  2005 01 01 00 00 00  2005 01 02 00 00 00  AAC4*                 From AAC41360.05O       
-CHLK CHLK             001  2005 03 11 00 00 00  2005 03 12 00 00 00  CHLK*                 From CHLK0700.05O       
-CHUM 25601M001        001  2002 01 01 00 00 00  2023 01 12 00 00 00  CHUM*                 From CHUM0010.02O       
-MDVJ 12309M005        001  2013 01 18 00 00 00  2013 01 23 00 00 00  MDVJ*                 From MDVJ0180.13O       
-ONSA 10402M004        001  2013 04 09 00 00 00  2013 04 13 00 00 00  ONSA*                 From ONSA0990.13O       
-PERT 50133M001        001  2004 12 24 00 00 00  2004 12 29 00 00 00  PERT*                 From PERT3590.04O       
-ULAB 24201M001        001  2004 08 23 00 00 00  2004 08 28 00 00 00  ULAB*                 From ULAB2360.04O       
-WSRT 13506M005        001  2013 10 06 00 00 00  2013 10 11 00 00 00  WSRT*                 From WSRT2790.13O       
-WUHN 21602M001        001  2013 08 01 00 00 00  2013 08 06 00 00 00  WUHN*                 From WUHN2130.13O       
+AAC4 AACH             001  2005 05 16 03 03 00  2005 05 16 03 03 00  AAC4*                 From AAC41360.05O       
+CHLK CHLK             001  2005 03 11 00 00 00  2005 03 11 00 00 00  CHLK*                 From CHLK0700.05O       
+CHUM 25601M001        001  2002 01 01 00 00 00  2002 01 01 03 09 00  CHUM*                 From CHUM0010.02O       
+MDVJ 12309M005        001  2013 01 18 00 00 00  2013 01 18 03 09 00  MDVJ*                 From MDVJ0180.13O       
+ONSA 10402M004        001  2013 04 09 00 00 00  2013 04 09 03 09 00  ONSA*                 From ONSA0990.13O       
+PERT 50133M001        001  2004 02 24 00 00 00  2004 02 24 03 09 00  PERT*                 From PERT3590.04O       
+ULAB 24201M001        001  2004 08 23 00 00 00  2004 08 23 00 09 00  ULAB*                 From ULAB2360.04O       
+WSRT 13506M005        001  2013 00 06 00 00 00  2013 00 06 03 09 00  WSRT*                 From WSRT2790.13O       
+WUHN 21602M001        001  2013 08 01 00 00 00  2013 08 01 03 09 00  WUHN*                 From WUHN2130.13O       
 
 TYPE 002: STATION INFORMATION
 --------------------------------------
 
 STATION NAME          FLG          FROM                   TO         RECEIVER TYPE         RECEIVER SERIAL NBR   REC #   ANTENNA TYPE          ANTENNA SERIAL NBR    ANT #    NORTH      EAST      UP      DESCRIPTION             REMARK
-AAC4 AACH             001  2005 01 01 00 00 00  2005 01 02 00 00 00  TPS E_GGD             235-18                235-18  TPSCR3_GGD      NONE  127                   127       0.0000    0.0000    0.3560  AAC4 AACH               From AAC41360.05O       
-CHLK CHLK             001  2005 03 11 00 00 00  2005 03 12 00 00 00  LEICA RS500           82150                 82150   LEIAT504        NONE  1257                  1257      0.0000    0.0000    0.1000  CHLK CHLK               From CHLK0700.05O       
-CHUM 25601M001        001  2002 01 01 00 00 00  2023 01 12 00 00 00  ROGUE SNR-8000        T136                  T136    AOAD/M_T        NONE  113                   113       0.0000    0.0000    0.0900  CHUM 25601M001          From CHUM0010.02O       
-MDVJ 12309M005        001  2013 01 18 00 00 00  2013 01 23 00 00 00  TPS NETG3             401                   401     JPSREGANT_DD_E1 NONE  RA0195                RA0195    0.0000    0.0000    0.1660  MDVJ 12309M005          From MDVJ0180.13O       
-ONSA 10402M004        001  2013 04 09 00 00 00  2013 04 13 00 00 00  JPS E_GGD             AG72YY                AG72YY  AOAD/M_B        OSOD  020                   020       0.0000    0.0000    0.9950  ONSA 10402M004          From ONSA0990.13O       
-PERT 50133M001        001  2004 12 24 00 00 00  2004 12 29 00 00 00  ASHTECH UZ-12         200313                200313  ASH701945C_M    NONE  CR6200                CR6200    0.0000    0.0000    0.0595  PERT 50133M001          From PERT3590.04O       
-ULAB 24201M001        001  2004 08 23 00 00 00  2004 08 28 00 00 00  AOA SNR-8000 ACT      287-U                 287-U   AOAD/M_T        NONE  340-U                 340-U     0.0000    0.0000    0.0460  ULAB 24201M001          From ULAB2360.04O       
-WSRT 13506M005        001  2013 10 06 00 00 00  2013 10 11 00 00 00  AOA SNR-12 ACT        229                   229     AOAD/M_T        DUTD  273                   273       0.0000    0.0000    0.3888  WSRT 13506M005          From WSRT2790.13O       
-WUHN 21602M001        001  2013 08 01 00 00 00  2013 08 06 00 00 00  TRIMBLE NETR8         4918K3                4918K3  TRM59800.00     ENCL  4852A6                4852A6    0.0094    0.0022    2.3612  WUHN 21602M001          From WUHN2130.13O       
+AAC4 AACH             001  2005 05 16 03 03 00  2005 05 16 03 03 00  TPS E_GGD             235-18                235-18  TPSCR3_GGD      NONE  127                   127      0.0000     0.0000    0.3560  AAC4 AACH               From AAC41360.05O       
+CHLK CHLK             001  2005 03 11 00 00 00  2005 03 11 00 00 00  LEICA RS500           82150                 82150   LEIAT504        NONE  1257                  1257     0.0000     0.0000    0.1000  CHLK CHLK               From CHLK0700.05O       
+CHUM 25601M001        001  2002 01 01 00 00 00  2002 01 01 03 09 00  ROGUE SNR-8000        T136                  T136    AOAD/M_T        NONE  113                   113      0.0000     0.0000    0.0900  CHUM 25601M001          From CHUM0010.02O       
+MDVJ 12309M005        001  2013 01 18 00 00 00  2013 01 18 03 09 00  TPS NETG3             401                   401     JPSREGANT_DD_E1 NONE  RA0195                RA0195   0.0000     0.0000    0.1660  MDVJ 12309M005          From MDVJ0180.13O       
+ONSA 10402M004        001  2013 04 09 00 00 00  2013 04 09 03 09 00  JPS E_GGD             AG72YY                AG72YY  AOAD/M_B        OSOD  020                   020      0.0000     0.0000    0.9950  ONSA 10402M004          From ONSA0990.13O       
+PERT 50133M001        001  2004 02 24 00 00 00  2004 02 24 03 09 00  ASHTECH UZ-12         200313                200313  ASH701945C_M    NONE  CR6200                CR6200   0.0000     0.0000    0.0595  PERT 50133M001          From PERT3590.04O       
+ULAB 24201M001        001  2004 08 23 00 00 00  2004 08 23 00 09 00  AOA SNR-8000 ACT      287-U                 287-U   AOAD/M_T        NONE  340-U                 340-U    0.0000     0.0000    0.0460  ULAB 24201M001          From ULAB2360.04O       
+WSRT 13506M005        001  2013 00 06 00 00 00  2013 00 06 03 09 00  AOA SNR-12 ACT        229                   229     AOAD/M_T        DUTD  273                   273      0.0000     0.0000    0.3888  WSRT 13506M005          From WSRT2790.13O       
+WUHN 21602M001        001  2013 08 01 00 00 00  2013 08 01 03 09 00  TRIMBLE NETR8         4918K3                4918K3  TRM59800.00     ENCL  4852A6                4852A6   0.0094     0.0022    2.3612  WUHN 21602M001          From WUHN2130.13O       
 
 
 TYPE 003: HANDLING OF STATION PROBLEMS

@@ -109,9 +109,19 @@ def save_clu_file(stations, output_path):
         "****************  ***\n"
     )
     
+    # Create a set to track unique station IDs
+    seen_stations = set()
+    unique_stations = []
+    
+    for station in stations:
+        station_id = f"{station.marker_name[:4].strip()}{station.marker_number[:9].strip()}"
+        if station_id not in seen_stations:
+            seen_stations.add(station_id)
+            unique_stations.append(station)
+    
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(header)
-        for station in stations:
+        for station in unique_stations:
             station_id = f"{station.marker_name[:4].strip()}{station.marker_number[:9].strip()}"
             line = format_clu_line(station_id)
             f.write(line + '\n')
@@ -161,9 +171,39 @@ def save_crd_file(stations, output_path):
         "NUM  STATION NAME           X (M)          Y (M)          Z (M)     FLAG\n\n"
     )
     
+    # Create a dictionary to track unique stations with their creation times
+    station_dict = {}
+    
+    for station in stations:
+        station_id = f"{station.marker_name[:4].strip()}{station.marker_number[:9].strip()}"
+        file_path = os.path.join(INPUT_DIR, station.filename)
+        
+        try:
+            # Get file creation time
+            creation_time = os.path.getctime(file_path)
+            
+            # If station not in dict or current file is newer, update the entry
+            if station_id not in station_dict or creation_time > station_dict[station_id]['time']:
+                station_dict[station_id] = {
+                    'station': station,
+                    'time': creation_time
+                }
+        except Exception:
+            # If we can't get creation time, keep the station anyway
+            if station_id not in station_dict:
+                station_dict[station_id] = {
+                    'station': station,
+                    'time': 0
+                }
+    
+    # Sort stations by name and number
+    sorted_stations = sorted(station_dict.values(), 
+                           key=lambda x: (x['station'].marker_name, x['station'].marker_number))
+    
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(header)
-        for i, station in enumerate(stations, 1):
+        for i, station_data in enumerate(sorted_stations, 1):
+            station = station_data['station']
             station_id = f"{station.marker_name[:4].strip()}{station.marker_number[:9].strip()}"
             x, y, z = parse_xyz_coordinates(station.xyz)
             line = format_crd_line(i, station_id, x, y, z)
@@ -198,9 +238,19 @@ def save_pld_file(stations, output_path, plate_name):
         "NUM  STATION NAME           VX (M/Y)       VY (M/Y)       VZ (M/Y)  FLAG   PLATE\n\n"
     )
     
+    # Create a set to track unique station IDs
+    seen_stations = set()
+    unique_stations = []
+    
+    for station in stations:
+        station_id = f"{station.marker_name[:4].strip()}{station.marker_number[:9].strip()}"
+        if station_id not in seen_stations:
+            seen_stations.add(station_id)
+            unique_stations.append(station)
+    
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(header)
-        for i, station in enumerate(stations, 1):
+        for i, station in enumerate(unique_stations, 1):
             station_id = f"{station.marker_name[:4].strip()}{station.marker_number[:9].strip()}"
             line = format_pld_line(i, station_id, plate_name)
             f.write(line + '\n')
@@ -246,9 +296,19 @@ def save_abb_file(stations, output_path):
         "Station name             4-ID    2-ID    Remark\n\n\n"
     )
     
+    # Create a set to track unique station IDs
+    seen_stations = set()
+    unique_stations = []
+    
+    for station in stations:
+        station_id = f"{station.marker_name[:4].strip()}{station.marker_number[:9].strip()}"
+        if station_id not in seen_stations:
+            seen_stations.add(station_id)
+            unique_stations.append(station)
+    
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(header)
-        for i, station in enumerate(stations):
+        for i, station in enumerate(unique_stations):
             station_id = generate_station_id(station.marker_name, station.marker_number)
             sequence_id = generate_sequence_id(i)
             line = format_abb_line(station_id, sequence_id, station.filename)
