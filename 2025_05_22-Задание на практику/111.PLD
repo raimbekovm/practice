@@ -1,0 +1,15 @@
+Example plate assignement
+--------------------------------------------------------------------------------
+LOCAL GEODETIC DATUM: IGS14           
+
+NUM  STATION NAME           VX (M/Y)       VY (M/Y)       VZ (M/Y)  FLAG   PLATE
+
+  1  PERT 50133M001                                                        222
+  2  MDVJ 12309M005                                                        222
+  3  ULAB 24201M001                                                        222
+  4  WUHN 21602M001                                                        222
+  5  ONSA 10402M004                                                        222
+  6  WSRT 13506M005                                                        222
+  7  CHLK CHLK                                                             222
+  8  AAC4 AACH                                                             222
+  9  CHUM 25601M001                                                        222

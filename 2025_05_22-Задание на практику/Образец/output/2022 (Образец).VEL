@@ -1,0 +1,16 @@
+NUVEL1A-NNR VELOCITIES                                           14-DEC-23 19:25
+--------------------------------------------------------------------------------
+LOCAL GEODETIC DATUM: IGS14           
+
+NUM  STATION NAME           VX (M/Y)       VY (M/Y)       VZ (M/Y)  FLAG   PLATE
+
+  1  AAC4 ALMALIASH         -0.02452        0.00837       -0.00131    V    EURA
+  2  AAV4 AARCHA_RE         -0.02454        0.00816       -0.00147    V    EURA
+  3  AAV5 AARCHA_RE         -0.02454        0.00816       -0.00147    V    EURA
+  4  ABD5 ABDUKALYK         -0.02439        0.00879       -0.00095    V    EURA
+  5  ABS4 PER.ALABA         -0.02470        0.00769       -0.00188    V    EURA
+  6  AKA4 P.AKSAIY          -0.02472        0.00760       -0.00195    V    EURA
+  7  AKC4 S.AKTAL-C         -0.02463        0.00802       -0.00161    V    EURA
+  8  AKH4 AKSHYRAK          -0.02483        0.00715       -0.00233    V    EURA
+  9  AKJ4 AKJOL (AK         -0.02440        0.00876       -0.00097    V    EURA
+ 10  AKS4 AKSAI (AK         -0.02471        0.00778       -0.00182    V    EURA

@@ -1,6 +1,7 @@
 import os
 import re
 import datetime
+import numpy as np
 
 # Constants
 INPUT_DIR = '2025_05_22-Задание на практику/Образец/input'
@@ -66,9 +67,9 @@ def extract_obs_time(line):
         year = line[2:6].strip()
         month = line[11:13].strip().zfill(2)
         day = line[16:18].strip().zfill(2)
-        hour = line[23:25].strip().zfill(2)
-        minute = line[29:31].strip().zfill(2)
-        second = line[32:33].strip().zfill(2)
+        hour = line[22:24].strip().zfill(2)
+        minute = line[28:30].strip().zfill(2)
+        second = line[34:35].strip().zfill(2)
         return f"{year} {month} {day} {hour} {minute} {second}"
     except Exception:
         return '0000 00 00 00 00 00'
@@ -472,21 +473,85 @@ def format_sta_type_002(station_data):
         f'{remark:<24}'  # Remark (24 chars)
     )
 
-def save_sta_file(combined_periods, output_path):
+def get_type002_periods(stations):
+    """
+    Для каждой станции разбить периоды по уникальным комбинациям (RECEIVER TYPE, ANTENNA TYPE).
+    Период определяется по min/max дню из имени файла (3 цифры и год после точки),
+    часы/мин/сек из TIME OF FIRST/LAST OBS.
+    """
+    from collections import defaultdict
+    import re
+    station_data = defaultdict(list)
+    for st in stations:
+        station_name = st.marker_name[:4].strip()
+        rec_serial, rec_type = parse_rec_fields(st.receiver)
+        ant_serial, ant_type = parse_ant_fields(st.antenna)
+        key = (station_name, rec_type, ant_type)
+        # Парсим день и год из имени файла
+        m = re.search(r'(\d{4})(\d{3})\.(\d{2})[Oo]', st.filename)
+        if m:
+            # Например: CHUM001.02O -> day=001, year=02
+            day_of_year = int(m.group(2))
+            year = 2000 + int(m.group(3))
+        else:
+            # fallback: используем extract_date_from_filename
+            day_of_year = 1
+            year = 2000
+        station_data[key].append({
+            'station_info': st,
+            'day_of_year': day_of_year,
+            'year': year,
+            'filename': st.filename
+        })
+    type002_periods = []
+    for key, data_list in station_data.items():
+        if not data_list:
+            continue
+        # Сортируем по году и дню
+        data_list.sort(key=lambda x: (x['year'], x['day_of_year']))
+        # Первый и последний файл в группе
+        first = data_list[0]
+        last = data_list[-1]
+        # FROM: year, day_of_year, часы/мин/сек из TIME OF FIRST OBS
+        st_first = first['station_info']
+        st_last = last['station_info']
+        # Получаем дату из года и дня
+        from_date = datetime.datetime.strptime(f"{first['year']} {first['day_of_year']}", "%Y %j")
+        to_date = datetime.datetime.strptime(f"{last['year']} {last['day_of_year']}", "%Y %j")
+        # Часы/мин/сек из TIME OF FIRST/LAST OBS
+        from_time = extract_obs_time(st_first.header.get('TIME OF FIRST OBS', ''))
+        to_time = extract_obs_time(st_last.header.get('TIME OF LAST OBS', ''))
+        # Подставляем часы/мин/сек
+        from_date_str = f"{from_date.year} {from_date.month:02d} {from_date.day:02d} " + ' '.join(from_time.split()[3:])
+        to_date_str = f"{to_date.year} {to_date.month:02d} {to_date.day:02d} " + ' '.join(to_time.split()[3:])
+        period = {
+            'station_info': st_first,
+            'from_date': from_date_str,
+            'to_date': to_date_str,
+            'remark_filename': first['filename']
+        }
+        type002_periods.append(period)
+    # Сортируем итоговый список по STATION NAME для последовательности в файле
+    type002_periods.sort(key=lambda x: (x['station_info'].marker_name, x['station_info'].marker_number, x['from_date']))
+    return type002_periods
+
+def save_sta_file(combined_periods, output_path, stations=None):
     """Save the STA file with the formatted station information"""
     header = (
-        'Station information file\n'
+        'STATION INFORMATION FILE                                         03-JAN-24 22:57\n'
         '--------------------------------------------------------------------------------\n\n'
         'FORMAT VERSION: 1.01\n'
         'TECHNIQUE:      GNSS\n\n'
         'TYPE 001: RENAMING OF STATIONS\n'
-        '--------------------------------------\n\n'
+        '------------------------------\n\n'
         'STATION NAME          FLG          FROM                   TO         OLD STATION NAME      REMARK\n'
+        '****************      ***  YYYY MM DD HH MM SS  YYYY MM DD HH MM SS  ********************  ************************\n'
     )
     type2_header = (
-        '\nTYPE 002: STATION INFORMATION\n'
+        '\n\nTYPE 002: STATION INFORMATION\n'
         '--------------------------------------\n\n'
         'STATION NAME          FLG          FROM                   TO         RECEIVER TYPE         RECEIVER SERIAL NBR   REC #   ANTENNA TYPE          ANTENNA SERIAL NBR    ANT #    NORTH      EAST      UP      DESCRIPTION             REMARK\n'
+        '****************      ***  YYYY MM DD HH MM SS  YYYY MM DD HH MM SS  ********************  ********************  ******  ********************  ********************  ******  ***.****  ***.****  ***.****  **********************  ************************\n'
     )
     type3 = (
         '\n\nTYPE 003: HANDLING OF STATION PROBLEMS\n'
@@ -507,26 +572,89 @@ def save_sta_file(combined_periods, output_path):
         'STATION NAME          FLG  FROM                 TO                   MARKER TYPE           REMARK\n'
         '****************      ***  YYYY MM DD HH MM SS  YYYY MM DD HH MM SS  ********************  ************************\n'
     )
-    
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(header)
         for item in combined_periods:
             f.write(format_sta_type_001(item) + '\n')
         f.write(type2_header)
-        for item in combined_periods:
-            f.write(format_sta_type_002(item) + '\n')
+        # TYPE 002: используем periods по receiver/antenna
+        if stations is not None:
+            type002_periods = get_type002_periods(stations)
+            for item in type002_periods:
+                f.write(format_sta_type_002(item) + '\n')
+        else:
+            for item in combined_periods:
+                f.write(format_sta_type_002(item) + '\n')
         f.write(type3)
         f.write(type4)
         f.write(type5)
 
+def parse_xyz_coordinates_float(xyz_line):
+    """Parse X, Y, Z coordinates from APPROX POSITION XYZ line as floats"""
+    if xyz_line == '-':
+        return 0.0, 0.0, 0.0
+    x = xyz_line[2:15].strip()
+    y = xyz_line[16:29].strip()
+    z = xyz_line[30:43].strip()
+    try:
+        x = float(x)
+        y = float(y)
+        z = float(z)
+    except ValueError:
+        x = y = z = 0.0
+    return x, y, z
+
+def format_vel_line(num, station_id, vx, vy, vz, plate_name):
+    """Format a line for the VEL file with velocities"""
+    station_name = station_id[:4]
+    station_number = station_id[4:]
+    if num < 10:
+        num_str = f"  {num}"
+    else:
+        num_str = f" {num}"
+    return (
+        f"{num_str}  "
+        f"{station_name} {station_number:<9}    "
+        f"{vx:13.5f}  "
+        f"{vy:13.5f}  "
+        f"{vz:13.5f}    "
+        f"{'V'}    "   # FLAG space
+        f"{plate_name}"
+    )
+
+def save_vel_file(stations, output_path, plate_name):
+    """Save the VEL file with calculated velocities"""
+    header = (
+        "NUVEL1A-NNR VELOCITIES                                           14-DEC-23 19:25\n"
+        "--------------------------------------------------------------------------------\n"
+        "LOCAL GEODETIC DATUM: IGS14           \n\n"
+        "NUM  STATION NAME           VX (M/Y)       VY (M/Y)       VZ (M/Y)  FLAG   PLATE\n\n"
+    )
+    omega = np.array([-4.128e-10, -2.516e-9, 3.648e-9])  # rad/year
+    seen_stations = set()
+    unique_stations = []
+    for station in stations:
+        station_id = f"{station.marker_name[:4].strip()}{station.marker_number[:9].strip()}"
+        if station_id not in seen_stations:
+            seen_stations.add(station_id)
+            unique_stations.append(station)
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(header)
+        for i, station in enumerate(unique_stations, 1):
+            station_id = f"{station.marker_name[:4].strip()}{station.marker_number[:9].strip()}"
+            x, y, z = parse_xyz_coordinates_float(station.xyz)
+            r = np.array([x, y, z])
+            v = np.cross(omega, r)  # [m/year]
+            vx, vy, vz = v
+            line = format_vel_line(i, station_id, vx, vy, vz, plate_name)
+            f.write(line + '\n')
+
 def main():
-    # Get plate name first
+    base_name = input("Введите имя для выходных файлов: ").strip()
     plate_name = input("Введите название плиты: ").strip()
     
-    # Find all RINEX files
     files = find_rinex_files(INPUT_DIR)
     
-    # Process each file
     stations = []
     for file in files:
         try:
@@ -536,16 +664,15 @@ def main():
         except Exception as e:
             print(f'Ошибка при обработке файла {file}: {str(e)}')
     
-    # Get combined periods for STA file
     combined_periods = get_combined_periods(stations)
     
-    # Save all files
     try:
-        save_clu_file(stations, '2025_05_22-Задание на практику/2025.CLU')
-        save_crd_file(stations, '2025_05_22-Задание на практику/2025.CRD')
-        save_pld_file(stations, '2025_05_22-Задание на практику/2025.PLD', plate_name)
-        save_abb_file(stations, '2025_05_22-Задание на практику/2025.ABB')
-        save_sta_file(combined_periods, '2025_05_22-Задание на практику/2025.STA')
+        save_clu_file(stations, f'2025_05_22-Задание на практику/{base_name}.CLU')
+        save_crd_file(stations, f'2025_05_22-Задание на практику/{base_name}.CRD')
+        save_pld_file(stations, f'2025_05_22-Задание на практику/{base_name}.PLD', plate_name)
+        save_abb_file(stations, f'2025_05_22-Задание на практику/{base_name}.ABB')
+        save_sta_file(combined_periods, f'2025_05_22-Задание на практику/{base_name}.STA', stations)
+        save_vel_file(stations, f'2025_05_22-Задание на практику/{base_name}.VEL', plate_name)
     except Exception as e:
         print(f'Ошибка при сохранении файлов: {str(e)}')
 
